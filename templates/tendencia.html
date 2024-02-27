@@ -1,0 +1,44 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<div class="container mt-6">
+  <div class="card bg-light text-dark">
+    <div class="card-header">Lineas de Tendencia</div>
+    <div class="card-body">
+      <div class="chart1" id="graph1" >
+        <script>
+            var plot1 = {{ plot1 | safe }};
+            Plotly.plot('graph1',plot1,{});
+        </script>
+      </div>      
+    </div> 
+    <div class="card-footer">Datos en Unidades</div>
+  </div>
+</div>
+
+
+<br>
+
+<div class="container mt-6">
+  <div class="card bg-light text-dark">
+    <div class="card-header">Lineas de Tendencia</div>
+    <div class="card-body">
+      <div class="chart1" id="graph2" >
+        <script>
+            var plot2 = {{ plot2 | safe }};
+            Plotly.plot('graph2',plot2,{});
+        </script>
+      </div>      
+    </div> 
+    <div class="card-footer">Datos en Unidades</div>
+  </div>
+</div>
+
+{% endblock %}
+
+
+
+
+
+
