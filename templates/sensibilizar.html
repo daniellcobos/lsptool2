@@ -1,10 +1,21 @@
 {% extends "layout.html" %}
 
 {% block content %}
+<style>
+table.dataTable td {
+  font-size: 0.9em;
+      padding: 3px  !important;
+}
+table.dataTable th {
+  font-size: 0.9em;
+      padding: 3px !important;
+}
+</style>
 
-
-<div>
-<table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" style="width:90%" id="example" align="center">
+<div class="container">
+    <div class="row">
+            <div class="col-9">
+        <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" style="width:90%" id="example" align="center">
 	<thead>
 		<tr>
 			<th>Periodo</th>
@@ -22,7 +33,6 @@
 	</tbody>
 </table>
 
-<br>
 <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" style="width:90%" id="cre2" align="center">
 	<thead>
 		<tr>
@@ -40,43 +50,54 @@
 
 	</tbody>
 </table>
-</div>
-
-
-
-<div class="card bg-light text-dark">
+    </div>
+<div class="col-3">
+    <div class="card bg-light text-dark">
     <div class="card-header">Proceso de Sensibilizacion</div>
     <div class="card-body">
         <div class="container mt-6">
             <form>
                 <label for="Valor">
-                    Sensibilizar   
+                    Sensibilizar
                     <input type="number" name="Valor" id="Valor"
-                        min="0" max="1200000000" step="0.01" value="0">
+                        min="0" max="1200000000" step="0.1" value="0">
                     <input type="hidden" name="index" id="index">
                 </label>
-            
+
                 <p>Movimientos:</p>
                 <input type="radio" id="total1" name="totalizar" value="true" checked>
                 <label for="age1">Vol. igual, repartir share</label><br>
                 <input type="radio" id="total2" name="totalizar" value="false">
-                <label for="age2">Vol. Incremental</label><br>  
-            
+                <label for="age2">Vol. Incremental</label><br>
+
                 <p>Opciones:</p>
                 <input type="radio" id="age3" name="agex" value="30">
                 <label for="age1">Puntual</label><br>
                 <input type="radio" id="age4" name="agex" value="60">
-                <label for="age2">De aqui en adelante</label><br>  
+                <label for="age2">De aqui en adelante</label><br>
 
-            
+
+
+
             </form>
-            <button id="rc" class="btn" value="Recalcular">Recalcular</button>
+            <button id="rc" class="btn btn-dark" value="Recalcular">Recalcular</button> <br>
+            <button id="reset" class="btn btn-success">Reiniciar Datos</button>
+
             </div>
-            
-    </div> 
+
+    </div>
     <div class="card-footer">Datos en Unidades</div>
   </div>
 </div>
+    </div>
+
+</div>
+
+</div>
+
+
+
+
 
 
 
@@ -113,7 +134,7 @@
     const table2 = new DataTable($('#cre2').dataTable({
 		data: dt2,
 		    columns: [
-		        { data: 'Periodo', render:DataTable.render.number(',', '.', 2, null, "%") },
+		        { data: 'Periodo' },
                 { data: 'PROTECTORES', render:DataTable.render.number(',', '.', 2, null, "%") },
                 { data: 'TAMPONES', render:DataTable.render.number(',', '.', 2, null, "%") },
 		        { data: 'TOALLAS' , render:DataTable.render.number(',', '.', 2, null, "%")},
@@ -149,6 +170,8 @@
 <script>
  const recalcular = document.getElementById("rc")
  const url = "/changeDt";
+
+
 
 
 
@@ -193,14 +216,38 @@ recalcular.addEventListener("click", function(event) {
         "totalizar": totalizar,
   // ...
 };
-    sendChanges(data)
-  // Función que se ejecuta al hacer clic en el elemento
-
-
-  // Puedes agregar código aquí para realizar acciones
-  // al hacer clic en el elemento.
-  // ...
+    const indarray = JSON.parse(index)
+    console.log(indarray)
+     // Función que se ejecuta al hacer clic en el elemento
+    if (indarray[1] === 3 ||indarray[1] === 0 || indarray[1] === 7 ){
+        alert("No se pueden modificar columnas agregadas")
+    }
+    else{
+            sendChanges(data)
+    }
 });
+
+const resetData = () => {
+    const options2 = {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },}
+    fetch("/reset",options2,{"A":"A"}).then((response) => response.json().then(
+        () => {
+           $('#example').DataTable().clear();
+        $('#example').DataTable().rows.add(dt1);
+        $('#example').DataTable().draw();
+        $('#cre2').DataTable().clear();
+        $('#cre2').DataTable().rows.add(dt2);
+        $('#cre2').DataTable().draw();
+ }
+    ))
+}
+
+const reset = document.getElementById("reset")
+ reset.addEventListener("click",() => {resetData()}
+ )
 </script>
 
 {% endblock %}

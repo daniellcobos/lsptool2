@@ -180,31 +180,41 @@ def recalculateTotals(df,df_cre,totalizar,changedcolumn):
     dfcre2 = dfcre2.to_numpy()
     columns = df.columns.tolist()
     df2list = [firstrow]
-    for index, row in enumerate(dfcre2):
-        if totalizar == 'true':
+    if totalizar == 'true':
+        for index, row in enumerate(dfcre2):
             try:
-                ogrow = df.iloc[index+1]
                 row[1:] = (row[1:]/100) + 1
                 nextrow = df2list[index] * row
                 nextrow[0] = row[0]
+                bcolumns = columns[1:-1]
+                #Toallas es un agregado, se remueve de los calculos
+                bcolumns.remove('TOALLAS')
                 #saca diferencias
-                difrow = nextrow-ogrow
-                dif = sum(difrow.tolist())/4
+                print(sum(nextrow[bcolumns].tolist()),nextrow[-1])
+                dif =  sum(nextrow[bcolumns].tolist()) - nextrow[-1]
+
+
                 print(dif)
                 #columnas base
-                bcolumns = columns[1:-1]
-                bcolumns.remove('TOALLAS')
+
                 bcolumns.remove(columns[changedcolumn])
+                #peso de las columnas que quedan
+                totalq = sum(nextrow[bcolumns].tolist())
+                pesosq = nextrow[bcolumns]/totalq
+                pesosq = pesosq * dif
+                print(pesosq)
                 #distribuye diferencias
-                nextrow[bcolumns] = nextrow[bcolumns] + dif
+                nextrow[bcolumns] = nextrow[bcolumns] - pesosq
+                nextrow['TOALLAS'] = nextrow['Nocturnas'] + nextrow['Normales'] + nextrow['Ultradelgadas']
                 df2list.append(nextrow)
             except Exception as e:
                 #print(df_cre.iloc[index])
                 print(e)
-            df2 = pd.DataFrame(data=df2list, columns=df.columns, index=range(0, len(df2list)))
-        else:
+        df2 = pd.DataFrame(data=df2list, columns=df.columns, index=range(0, len(df2list)))
+        return df2
+    else:
+        for index, row in enumerate(dfcre2):
             try:
-                ogrow = df.iloc[index+1]
                 row[1:] = (row[1:]/100) + 1
                 nextrow = df2list[index] * row
                 nextrow[0] = row[0]
@@ -213,13 +223,12 @@ def recalculateTotals(df,df_cre,totalizar,changedcolumn):
                 #print(df_cre.iloc[index])
                 print(e)
 
-            df2 = pd.DataFrame(data=df2list, columns=df.columns, index= range(0,len(df2list)))
-            df2['TOALLAS'] = df["Nocturnas","Normales","Ultradelgadas"].sum(axis=1)
-            df2['Total General'] = df["TOALLAS","PROTECTORES","TAMPONES"].sum(axis=1)
-
-
-
-    return df2
+        df2 = pd.DataFrame(data=df2list, columns=df.columns, index= range(0,len(df2list)))
+        print(df2.columns.tolist())
+        df2['TOALLAS'] = df2['Nocturnas'] + df2['Normales'] + df2['Ultradelgadas']
+        df2['Total General'] = df2["TOALLAS"] + df2["PROTECTORES"] + df2["TAMPONES"]
+        print(df2)
+        return df2
 
 @app.route('/changeDt',methods=["POST"])
 def changeDt():
@@ -249,6 +258,14 @@ def changeDt():
 
     return [df2,df_cre3]
 
+@app.route('/reset',methods=["POST"])
+def reiniciar():
+    # Read Excel file
+    apppath = app.root_path
+    dfpath = path.join(apppath, 'dt.xlsx')
+    df = pd.read_excel(dfpath, sheet_name='Totales')
+    session['df'] = df.to_dict(index=True)
+    return {"resetead":"resetead"}
 
 if __name__ == '__main__':
     app.run(debug=True)
