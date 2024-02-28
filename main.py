@@ -152,9 +152,8 @@ def getCrecimientos(df):
                     # print(row.iloc[i])
                     a = df.iloc[index][i]
                     b = df.iloc[index - 1][i]
-                    c = round(((a / b - 1)) * 100, 1)
                     c = ((a / b - 1))
-                    crec.append(round(c*100,4))
+                    crec.append(c*100)
             creci.append(crec)
     df_cre = pd.DataFrame(data=creci, columns=df.columns)
     return df_cre
@@ -175,22 +174,51 @@ def sensibilizar():
 
     return render_template('sensibilizar.html', df2 = df2, df_cre2= df_cre2)
 
-def recalculateTotals(df,df_cre):
+def recalculateTotals(df,df_cre,totalizar,changedcolumn):
     firstrow = df.iloc[0]
     dfcre2 = df_cre.copy(deep=True)
     dfcre2 = dfcre2.to_numpy()
-
+    columns = df.columns.tolist()
     df2list = [firstrow]
     for index, row in enumerate(dfcre2):
-        try:
-            row[1:] = (row[1:]/100) + 1
-            nextrow = df2list[index] * row
-            nextrow[0] = row[0]
-            #nextrow = df2list[index] * row
-            df2list.append(nextrow)
-        except:
-            print(df_cre.iloc[index])
-    df2 = pd.DataFrame(data=df2list, columns=df.columns, index= range(0,len(df2list)))
+        if totalizar == 'true':
+            try:
+                ogrow = df.iloc[index+1]
+                row[1:] = (row[1:]/100) + 1
+                nextrow = df2list[index] * row
+                nextrow[0] = row[0]
+                #saca diferencias
+                difrow = nextrow-ogrow
+                dif = sum(difrow.tolist())/4
+                print(dif)
+                #columnas base
+                bcolumns = columns[1:-1]
+                bcolumns.remove('TOALLAS')
+                bcolumns.remove(columns[changedcolumn])
+                #distribuye diferencias
+                nextrow[bcolumns] = nextrow[bcolumns] + dif
+                df2list.append(nextrow)
+            except Exception as e:
+                #print(df_cre.iloc[index])
+                print(e)
+            df2 = pd.DataFrame(data=df2list, columns=df.columns, index=range(0, len(df2list)))
+        else:
+            try:
+                ogrow = df.iloc[index+1]
+                row[1:] = (row[1:]/100) + 1
+                nextrow = df2list[index] * row
+                nextrow[0] = row[0]
+                df2list.append(nextrow)
+            except Exception as e:
+                #print(df_cre.iloc[index])
+                print(e)
+
+            df2 = pd.DataFrame(data=df2list, columns=df.columns, index= range(0,len(df2list)))
+            df2['TOALLAS'] = df["Nocturnas","Normales","Ultradelgadas"].sum(axis=1)
+            df2['Total General'] = df["TOALLAS","PROTECTORES","TAMPONES"].sum(axis=1)
+
+
+
     return df2
 
 @app.route('/changeDt',methods=["POST"])
@@ -208,13 +236,16 @@ def changeDt():
     parameters = request.json
     indexchange = json.loads(parameters["indexchange"])
     valuechange = parameters["valuechange"]
+    totalizar = parameters["totalizar"]
+
     df_cre.iloc[indexchange[0],indexchange[1]] = float(valuechange)
-    df2 = recalculateTotals(df,df_cre)
+    df2 = recalculateTotals(df,df_cre,totalizar,indexchange[1])
+    df_cre3 = getCrecimientos(df2)
     session['df'] = df2.to_dict(index=True)
-    print(df2)
+
     df2 = df2.to_json(orient='records')
 
-    df_cre3 = df_cre.to_json(orient='records')
+    df_cre3 = df_cre3.to_json(orient='records')
 
     return [df2,df_cre3]
 

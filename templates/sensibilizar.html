@@ -57,9 +57,9 @@
                 </label>
             
                 <p>Movimientos:</p>
-                <input type="radio" id="age1" name="age" value="30">
+                <input type="radio" id="total1" name="totalizar" value="true" checked>
                 <label for="age1">Vol. igual, repartir share</label><br>
-                <input type="radio" id="age2" name="age" value="60">
+                <input type="radio" id="total2" name="totalizar" value="false">
                 <label for="age2">Vol. Incremental</label><br>  
             
                 <p>Opciones:</p>
@@ -184,10 +184,13 @@ fetch(url, options,data)
 recalcular.addEventListener("click", function(event) {
     const change = document.getElementById("Valor").value
     const index = document.getElementById("index").value
+    const totalizar = $('input[name="totalizar"]:checked').val();
+
     const data = {
   // Propiedades del objeto a enviar
   "valuechange": change,
   "indexchange": index,
+        "totalizar": totalizar,
   // ...
 };
     sendChanges(data)
