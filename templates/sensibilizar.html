@@ -71,9 +71,9 @@ table.dataTable th {
                 <label for="age2">Vol. Incremental</label><br>
 
                 <p>Opciones:</p>
-                <input type="radio" id="age3" name="agex" value="30">
+                <input type="radio" id="change1" name="changes" value="punctual" checked>
                 <label for="age1">Puntual</label><br>
-                <input type="radio" id="age4" name="agex" value="60">
+                <input type="radio" id="change2" name="changes" value="foward">
                 <label for="age2">De aqui en adelante</label><br>
 
 
@@ -208,12 +208,14 @@ recalcular.addEventListener("click", function(event) {
     const change = document.getElementById("Valor").value
     const index = document.getElementById("index").value
     const totalizar = $('input[name="totalizar"]:checked').val();
+    const typechange = $('input[name="changes"]:checked').val();
 
     const data = {
   // Propiedades del objeto a enviar
   "valuechange": change,
   "indexchange": index,
         "totalizar": totalizar,
+        "typechange":typechange,
   // ...
 };
     const indarray = JSON.parse(index)

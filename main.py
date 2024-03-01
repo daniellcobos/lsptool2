@@ -146,12 +146,12 @@ def getCrecimientos(df):
     for index, row in df.iterrows():
         crec = []
         if index > 0:
-            crec.append(df.iloc[index][0])
+            crec.append(df.iloc[index].iloc[0])
             for i in range(len(row)):
                 if i > 0:
                     # print(row.iloc[i])
-                    a = df.iloc[index][i]
-                    b = df.iloc[index - 1][i]
+                    a = df.iloc[index].iloc[i]
+                    b = df.iloc[index - 1].iloc[i]
                     c = ((a / b - 1))
                     crec.append(c*100)
             creci.append(crec)
@@ -185,24 +185,19 @@ def recalculateTotals(df,df_cre,totalizar,changedcolumn):
             try:
                 row[1:] = (row[1:]/100) + 1
                 nextrow = df2list[index] * row
-                nextrow[0] = row[0]
+                nextrow.iloc[0] = row[0]
                 bcolumns = columns[1:-1]
                 #Toallas es un agregado, se remueve de los calculos
                 bcolumns.remove('TOALLAS')
                 #saca diferencias
-                print(sum(nextrow[bcolumns].tolist()),nextrow[-1])
-                dif =  sum(nextrow[bcolumns].tolist()) - nextrow[-1]
 
-
-                print(dif)
+                dif =  sum(nextrow[bcolumns].tolist()) - nextrow.iloc[-1]
                 #columnas base
-
                 bcolumns.remove(columns[changedcolumn])
                 #peso de las columnas que quedan
                 totalq = sum(nextrow[bcolumns].tolist())
                 pesosq = nextrow[bcolumns]/totalq
                 pesosq = pesosq * dif
-                print(pesosq)
                 #distribuye diferencias
                 nextrow[bcolumns] = nextrow[bcolumns] - pesosq
                 nextrow['TOALLAS'] = nextrow['Nocturnas'] + nextrow['Normales'] + nextrow['Ultradelgadas']
@@ -217,17 +212,15 @@ def recalculateTotals(df,df_cre,totalizar,changedcolumn):
             try:
                 row[1:] = (row[1:]/100) + 1
                 nextrow = df2list[index] * row
-                nextrow[0] = row[0]
+                nextrow.iloc[0] = row[0]
                 df2list.append(nextrow)
             except Exception as e:
                 #print(df_cre.iloc[index])
                 print(e)
 
         df2 = pd.DataFrame(data=df2list, columns=df.columns, index= range(0,len(df2list)))
-        print(df2.columns.tolist())
         df2['TOALLAS'] = df2['Nocturnas'] + df2['Normales'] + df2['Ultradelgadas']
         df2['Total General'] = df2["TOALLAS"] + df2["PROTECTORES"] + df2["TAMPONES"]
-        print(df2)
         return df2
 
 @app.route('/changeDt',methods=["POST"])
@@ -246,8 +239,18 @@ def changeDt():
     indexchange = json.loads(parameters["indexchange"])
     valuechange = parameters["valuechange"]
     totalizar = parameters["totalizar"]
+    type = parameters["typechange"]
+    print(indexchange[0], indexchange[1])
+    if type == "foward":
+        rows = df.shape[0]
+        for r in range(indexchange[0],rows-1):
+            try:
+                df_cre.iloc[r,indexchange[1]] = float(valuechange)
+            except Exception as e:
+                print(e)
 
     df_cre.iloc[indexchange[0],indexchange[1]] = float(valuechange)
+
     df2 = recalculateTotals(df,df_cre,totalizar,indexchange[1])
     df_cre3 = getCrecimientos(df2)
     session['df'] = df2.to_dict(index=True)
