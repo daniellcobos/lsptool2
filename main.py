@@ -414,6 +414,10 @@ def Proyectar():
             return "Archivo no valido"
     return render_template("Proyinicial.html", figs = figs)
 
+@app.route('/modificarproyeccion',methods=["POST"])
+def modifyproyeccion():
+    print(request.json)
+    return {"res":"e"}
 
 
 if __name__ == '__main__':
