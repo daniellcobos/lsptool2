@@ -1,0 +1,18 @@
+{% extends "layout.html" %}
+
+{% block content %}
+    <div id="maingraphs" class="container mt-6">
+
+    </div>
+    <script>
+    const figs = {{ figs|safe }}
+    const maingraphs = document.getElementById("maingraphs")
+        for (const series in figs){
+            const graphdiv = document.createElement("div")
+            maingraphs.appendChild(graphdiv)
+            const figdata = JSON.parse(figs[series])
+            Plotly.plot(graphdiv,figdata,{});
+        }
+    console.log(figs)
+    </script>
+{% endblock %}

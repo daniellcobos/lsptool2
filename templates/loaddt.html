@@ -1,0 +1,8 @@
+{% extends "layout.html" %}
+
+{% block content %}
+    <form action="{{ action }}" method="POST" enctype="multipart/form-data" accept=".sav">
+<input name="archivo1" id ="archivo1" type="file" >
+<input type="submit" value="subir archivo">
+</form>
+{% endblock %}
