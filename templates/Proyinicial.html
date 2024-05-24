@@ -11,10 +11,12 @@
         <div class="col-2">
             <div class="form-group mt-2 sticky-top pt-2">
                      <label for="categoria"> Categoria</label>  <select class="form-control" title="categoria" id="categoria" name="categoria"> </select>
-       <input class="form-check-input" type="checkbox" id="ptrend" checked/>   <label class="form-check-label">Ptrend </label>
-                <input  class="form-check-input"type="checkbox" id="pseasonal" checked/>   <label class="form-check-label">Pseasonal </label>
+       <input class="form-check-input" type="checkbox" id="ptrend" checked/>   <label class="form-check-label">Ptrend </label> <br>
+                <input  class="form-check-input"type="checkbox" id="pseasonal" checked/>   <label class="form-check-label">Pseasonal </label> <br>
        <input class="form-check-input" type="checkbox" id="pdamped" name="pdampled"  checked/>   <label class="form-check-label">Pdamped </label> <br>
           <label for="puse">Puse</label>  <input  class="form-control" type="number" id="puse" min="0" max="1" step="0.01" value="1" /> <br>
+                <label>Nombre Dt</label> <input  id="nomcat" class="form-control" type="text">
+                <br>
                 <button id="modificar" class="btn btn-primary"> Modificar </button>
                 <button id="seguir" class="btn btn-primary"> Seguir </button>
         </div>
@@ -25,6 +27,7 @@
     </div>
 
     <script>
+    let currentChanges = {}
     const figs = {{ figs|safe }}
     const maingraphs = document.getElementById("maingraphs")
     const catselect = document.getElementById("categoria")
@@ -50,22 +53,23 @@
     const pseasonal = document.getElementById("pseasonal")
     const pdamped = document.getElementById("pdamped")
     const puse = document.getElementById("puse")
+    const nomcat = document.getElementById("nomcat")
 
 
     const modifyProyeccion = async (ptrend,pseasonal,puse,pdamped,categoria) =>
     {
+        const changesDict = {  ptrend: ptrend,
+      pseasonal: pseasonal,
+      puse: puse,
+      pdamped: pdamped,
+      categoria: categoria,}
+
            fetch('/modificarproyeccion', {
   method: 'POST', // Método de la solicitud (en este caso, podría ser GET, POST, etc.)
   headers: {
     'Content-Type': 'application/json' // Tipo de contenido que estás enviando
   },
-  body: JSON.stringify({
-      ptrend: ptrend,
-      pseasonal: pseasonal,
-      puse: puse,
-      pdamped: pdamped,
-      categoria: categoria,
-  })
+  body: JSON.stringify(changesDict)
 })
 .then(response => {
   if (!response.ok) {
@@ -78,14 +82,30 @@
     const graphdata = JSON.parse(data[categoria])
      Plotly.deleteTraces(changedgraph, [0]);
     Plotly.plot(changedgraph,graphdata,{});
+    currentChanges[categoria] = changesDict
 
 })
 .catch(error => {
   // Manejo de errores
   console.error('Se produjo un error:', error);
-});
+});}
+
+    const saveProyeccion = () => {
+            currentChanges["Nombre"] = nomcat.value
+            fetch("/guardarproyeccion",
+                {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body:  JSON.stringify(currentChanges)
+}
+            ).then(response => location.href="/sensibilizar").catch(err => console.log(err))
     }
+
+
+
     const modificar = document.getElementById("modificar")
     modificar.addEventListener("click",() => {modifyProyeccion(ptrend.checked,pseasonal.checked,puse.value,pdamped.checked,categoria.value)})
+    const seguir = document.getElementById("seguir")
+    seguir.addEventListener("click",() => {saveProyeccion()})
     </script>
 {% endblock %}

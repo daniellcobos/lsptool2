@@ -1,3 +1,5 @@
+import os.path
+
 
 from flask import Flask, render_template, jsonify, request, session, url_for
 import pandas as pd
@@ -14,7 +16,7 @@ import matplotlib.pyplot as plt
 from datetime import date, datetime
 from dateutil.relativedelta import relativedelta
 from statsmodels.tsa.api import ExponentialSmoothing, SimpleExpSmoothing, Holt
-from proyecciones import proyeccioninicial,proyeccionmodify
+from proyecciones import *
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -323,6 +325,35 @@ def modifyproyeccion():
     dt = pd.read_excel(session["mpath"],sheet_name="dt")
     print(categoria,ptrend,pseasonal,puse,pdamped)
     return proyeccionmodify(dt,categoria,ptrend,pseasonal,puse,pdamped)
+
+@app.route('/guardarproyeccion',methods=["POST"])
+def guardarProyeccion():
+    body = request.json
+    nombre = body['Nombre']
+    if nombre != "":
+        catdir= path.join(app.root_path, 'static', 'uploads', nombre)
+        if not path.exists(catdir):
+            os.mkdir(catdir)
+        dt = pd.read_excel(session["mpath"], sheet_name="dt")
+        catpath = path.join(catdir, nombre+".xlsx")
+        jsonpath = path.join(catdir, nombre+".json")
+        with open(jsonpath, 'w', encoding='utf-8') as f:
+            json.dump(body, f, ensure_ascii=False, indent=4)
+        dt.to_excel(catpath,index=False)
+    else:
+        print(body)
+    return "e"
+
+@app.route('/cargarproyeccion/<string:cat>',methods=["GET"])
+def cargarProyeccion(cat):
+    catdir = path.join(app.root_path, 'static', 'uploads', cat)
+    cattpath = path.join(catdir, cat + ".xlsx")
+    jsonpath = path.join(catdir, cat + ".json")
+    with open(jsonpath, 'r', encoding='utf-8') as f:
+        params = json.load(f)
+    proyeccionParams(cattpath,params)
+    return "e"
+
 
 
 if __name__ == '__main__':

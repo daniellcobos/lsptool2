@@ -1,0 +1,10 @@
+{
+    "Normales": {
+        "ptrend": false,
+        "pseasonal": true,
+        "puse": "1",
+        "pdamped": true,
+        "categoria": "Normales"
+    },
+    "Nombre": "Fempro-Tibecuador"
+}
