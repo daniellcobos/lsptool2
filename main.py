@@ -352,6 +352,8 @@ def cargarProyeccion(cat):
     with open(jsonpath, 'r', encoding='utf-8') as f:
         params = json.load(f)
     proyeccionParams(cattpath,params)
+    agregarAnual(archivo=cattpath)
+    proyAnual(archivo=cattpath)
     return "e"
 
 

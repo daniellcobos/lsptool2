@@ -5,6 +5,7 @@ import plotly.express as px
 import numpy as np
 import plotly
 import itertools
+from openpyxl import load_workbook
 
 def mape(y_true, y_pred):
     y_true, y_pred = np.array(y_true), np.array(y_pred)
@@ -347,7 +348,8 @@ def proyeccionParams(archivo,params):
             mapping = {df.columns[0]: col0, df.columns[1]: col1}
             df = df.rename(columns=mapping)
             # Salva la proyeccion normal
-            with pd.ExcelWriter(archivo,mode='a') as writer:
+
+            with pd.ExcelWriter(archivo,mode='a', if_sheet_exists="replace") as writer:
                 mfila = columnName+"-proyeccion"
                 print(mfila)
                 df.to_excel(writer, index_label="Periodo",sheet_name=mfila)
@@ -360,11 +362,75 @@ def proyeccionParams(archivo,params):
             print("MAPE " + columnName + " = " + str(mape(xx, yy)))
 
 
+def agregarAnual(archivo):
+    df = []
+    hojas = []
+    wb2 = load_workbook(archivo)
+    sheet_names = wb2.sheetnames
+    dt = pd.read_excel(archivo, sheet_name="Sheet1")
+    cols = dt.columns
+    for c in cols:
+        if c != "Periodo":
+            hojas.append(c+"-proyeccion")
 
-    tfechaarr = list(itertools.chain.from_iterable(tfechaarr))
-    tcrecarr = list(itertools.chain.from_iterable(tcrecarr))
-    tcolumnamearr = list(itertools.chain.from_iterable(tcolumnamearr))
-    totaldata = {'fecha': tfechaarr, 'crecimiento': tcrecarr, 'categoria': tcolumnamearr}
-    dftd = pd.DataFrame(data=totaldata)
-    dftd.to_excel("test.xlsx")
-    print(dftd)
+    for a in hojas:
+        if a != "Sheet1":
+            col = pd.read_excel(archivo, sheet_name=a)
+            print(col)
+            col = col.set_index('Periodo')
+            df.append(col)
+    i = 0
+
+    dt = pd.concat(df, join='inner', axis=1)
+    # Salva la proyeccion final de cada serie
+    with pd.ExcelWriter(archivo, mode='a', if_sheet_exists="replace") as writer:
+        mfila = "Final"
+        dt.to_excel(writer, sheet_name=mfila)
+
+    print("Termino")
+
+def proyAnual(archivo):
+    df0 = pd.read_excel(archivo, sheet_name="Sheet1")
+    dt = pd.read_excel(archivo, sheet_name="Final")
+    # Paso 60 adaptado a google sheets
+    cols = df0.columns
+
+
+
+    df2 = dt.copy(deep=True)
+
+    df3 = df2[df2['Periodo'] > '2020-12-01']
+
+    df3 = df3[df3.columns.drop(list(df3.filter(regex='_ajuste')))]
+
+    df3.columns = df3.columns.str.replace("_proyeccion", "")
+
+    df3 = df3[cols]
+
+    df3 = pd.DataFrame(np.concatenate([df0, df3], axis=0), columns=df0.columns)
+    # obtiene categorias, asumiendo Periodo es la primera columna y Total General es la ultima columna
+    cats = cols[1:-1]
+    tg = cols[-1]
+    df3['TotalCat'] = df3[cats].sum(axis=1)
+    # Guarda la proyeccion total y la suma de las proyecciones para uso futuro
+    totalcat = df3['TotalCat']
+    totalgeneral = df3[tg]
+
+    df3 = df3.drop(['TotalCat'], axis=1)
+
+    # Para exportar a excel
+    df3sav = df3.copy(deep=True)
+    df3sav['Periodo'] = df3sav['Periodo'].astype(str)
+
+
+    ##archivo = 'P60_Crecimientos.xlsx'
+    # df3.to_excel(archivo, index=False)
+    df3['Periodo'] = pd.to_datetime(df3['Periodo'])
+    df3['Periodo'] = df3.Periodo.dt.year
+
+
+    df4 = (df3.groupby(df3.Periodo).sum())
+
+    with pd.ExcelWriter(archivo, mode='a', if_sheet_exists="replace") as writer:
+        df4.to_excel(writer, sheet_name="Totales")
+
